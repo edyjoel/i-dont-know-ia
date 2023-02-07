@@ -12,11 +12,15 @@ import Layout from "../layouts/Layout.astro";
   const suggestedQuestion1 = document.querySelector("#suggestedQuestion1");
   const suggestedQuestion2 = document.querySelector("#suggestedQuestion2");
 
-  let promise = null;
+  let promise: any = null;
 
   const handleClickSubmit = async () => {
     if (!question.value) {
       alert("Please enter a question");
+      return;
+    }
+
+    if (promise) {
       return;
     }
 
@@ -48,7 +52,6 @@ import Layout from "../layouts/Layout.astro";
   };
 
   const handleClickSuggestions = (e: any) => {
-    console.log(e.target.dataset.question);
     question.value = e.target.dataset.question;
     handleClickSubmit();
   };
