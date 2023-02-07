@@ -4,30 +4,64 @@ import Layout from "../layouts/Layout.astro";
 
 <script>
   import { getAnswer } from "../services/ai";
-  const loading = document.querySelector("#loading");
+  const form = document.querySelector("form");
+  const btnForm = document.querySelector("#btnForm");
+  const answerContainer = document.querySelector("#answer");
+  const answerText = document.querySelector("#answerText");
+  const question = document.querySelector("#question") as HTMLInputElement;
+  const suggestedQuestion1 = document.querySelector("#suggestedQuestion1");
+  const suggestedQuestion2 = document.querySelector("#suggestedQuestion2");
 
   let promise = null;
 
-  const handleClick = async () => {
-    loading!.classList.remove("hidden");
-    promise = getAnswer("What is the meaning of life?");
+  const handleClickSubmit = async () => {
+    if (!question.value) {
+      alert("Please enter a question");
+      return;
+    }
 
-    const answer = await promise;
+    question!.setAttribute("disabled", "disabled");
+    btnForm!.setAttribute("disabled", "disabled");
+    btnForm!.textContent = "Processing...";
+    answerContainer!.classList.add("hidden");
+
+    try {
+      promise = getAnswer(question.value);
+
+      const answer = await promise;
+
+      answerContainer!.classList.remove("hidden");
+      answerText!.innerHTML = answer;
+      question!.removeAttribute("disabled");
+      btnForm!.removeAttribute("disabled");
+      btnForm!.textContent = "Ask";
+    } catch (e) {
+      console.error(e);
+      alert("Something went wrong, please try again later.");
+
+      question!.removeAttribute("disabled");
+      btnForm!.removeAttribute("disabled");
+      btnForm!.textContent = "Ask";
+    }
 
     promise = null;
-    loading!.classList.add("hidden");
   };
 
-  const form = document.querySelector("form");
+  const handleClickSuggestions = (e: any) => {
+    console.log(e.target.dataset.question);
+    question.value = e.target.dataset.question;
+    handleClickSubmit();
+  };
+
   form!.addEventListener("submit", (e) => {
     e.preventDefault();
   });
 
-  const btnForm = document.querySelector("#btnForm");
-  btnForm!.addEventListener("click", handleClick);
+  btnForm!.addEventListener("click", handleClickSubmit);
+  suggestedQuestion1!.addEventListener("click", handleClickSuggestions);
+  suggestedQuestion2!.addEventListener("click", handleClickSuggestions);
 </script>
 
-<!-- https://www.behance.net/gallery/161040417/LAZY-Mobile-App-for-searching-interesting-events?tracking_source=search_projects%7Clanding+page+dark -->
 <Layout title="I don't know - Answer your questions with IA">
   <main>
     <section class="hero pt-12 pb-12">
@@ -801,25 +835,54 @@ import Layout from "../layouts/Layout.astro";
           </svg>
         </figure>
 
-        <div class="action">
+        <div class="action" id="action">
           <div class="w-full mb-4">
             <p class="text-center text-white text-2xl">
-              Ask a question and IA will try to find a posibble answer for you.
+              Ask a question and IA will try to find a posible answer for you.
             </p>
           </div>
           <div class="w-full">
             <form id="form" class="flex flex-col items-center justify-center">
               <input
                 type="text"
-                class="w-full md:w-6/12 p-4 rounded-lg mb-4 bg-transparent text-white text-lg border-orange-400 border-2 outline-none focus:border-orange-500"
-                placeholder="Ask a question"
+                class="w-full md:w-8/12 p-4 rounded-lg mb-4 bg-transparent text-white text-lg border-orange-400 border-2 outline-none focus:border-orange-500"
+                placeholder="Example: What is the meaning of life?"
+                id="question"
               />
               <button
-                class="bg-gradient-to-r from-yellow-400 to-orange-500 p-4 rounded-lg w-full md:w-6/12 text-white text-lg font-semibold hover:from-yellow-500 hover:to-orange-600"
+                class="flex justify-center items-center bg-gradient-to-r from-yellow-400 to-orange-500 p-4 rounded-lg w-full md:w-8/12 text-white text-lg font-semibold hover:from-yellow-500 hover:to-orange-600"
                 id="btnForm"
               >
+                <svg
+                  id="spin"
+                  class="animate-spin -ml-1 mr-3 h-5 w-5 text-white hidden"
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                >
+                  <circle
+                    class="opacity-25"
+                    cx="12"
+                    cy="12"
+                    r="10"
+                    stroke="currentColor"
+                    stroke-width="4"></circle>
+                  <path
+                    class="opacity-75"
+                    fill="currentColor"
+                    d="M4 12a8 8 0 018-8v1a7 7 0 00-7 7h1z"></path>
+                </svg>
                 Ask
               </button>
+              <div
+                id="answer"
+                class="text-center text-white w-full mt-6 hidden"
+              >
+                <h3 class="text-2xl font-bold mb-4">
+                  🤖This is a possible asnwer to your question👇
+                </h3>
+                <div id="answerText" class="text-lg"></div>
+              </div>
             </form>
           </div>
         </div>
@@ -849,11 +912,14 @@ import Layout from "../layouts/Layout.astro";
                 This is a typical question that is asked in an interview. It is
                 a good idea to have a posible answer to this question.
               </p>
-              <button
-                class="text-yellow-400 text-lg font-semibold hover:text-orange-500 transition w-full"
+              <a
+                id="suggestedQuestion1"
+                href="#action"
+                class="suggestedQuestion text-yellow-400 text-lg font-semibold hover:text-orange-500 transition w-full block"
+                data-question="What is your range salary?"
               >
                 Ask
-              </button>
+              </a>
             </div>
           </article>
           <article class="flex justify-center w-full m-2 md:w-6/12">
@@ -867,11 +933,14 @@ import Layout from "../layouts/Layout.astro";
                 This question sometines is difficult to answer. It is a good
                 idea to have a posible answer to this question.
               </p>
-              <button
-                class="text-yellow-400 text-lg font-semibold hover:text-orange-500 transition w-full"
+              <a
+                id="suggestedQuestion2"
+                href="#action"
+                class="suggestedQuestion text-yellow-400 text-lg font-semibold hover:text-orange-500 transition w-full block"
+                data-question="Why do you want to work in our company?"
               >
                 Ask
-              </button>
+              </a>
             </div>
           </article>
         </div>
@@ -882,7 +951,9 @@ import Layout from "../layouts/Layout.astro";
     <div class="container">
       <p class="text-center">
         Made with 👋 by <a
-          href="https://twitter.com/edyjoelx"
+          target="_blank"
+          rel="noopener noreferrer"
+          href="https://github.com/edyjoel/i-dont-know-ia"
           class="text-blue-500 hover:underline"><strong>Edy Joel</strong></a
         >
       </p>
